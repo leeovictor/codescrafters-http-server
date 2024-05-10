@@ -1,41 +1,60 @@
 const net = require("net");
+const Response = require('./Response');
 const PORT = 4221;
+
+const headersParser = (headersLines) => headersLines
+  .filter(value => Boolean(value))
+  .reduce((acc, cur) => {
+    const index = cur.indexOf(':');
+    const key = cur.substring(0, index).trim();
+    const value = cur.substring(index + 1).trim();
+    acc[key] = value;
+    return acc;
+  }, {});
 
 const requestParser = (data) => {
   const lines = data.toString().split('\r\n');
   const [startLine, ...headersLines] = lines;
-  const [method, path, protocol] = startLine.split(' ');
   
-  const headers = headersLines
-    .filter(value => Boolean(value))
-    .reduce((acc, cur) => {
-      const colonIndex = cur.indexOf(':');
-      const headerName = cur.substring(0, colonIndex);
-      const headerValue = cur.substring(colonIndex).replace(': ', '').trim(); // FIX
-      acc[headerName] = headerValue;
-      return acc;
-    }, {});
+  const [method, path, protocol] = startLine.split(' ');
+  const headers =  headersParser(headersLines);
   
   return { method, path, protocol, headers };
 }
+
 
 const server = net.createServer((socket) => {
   socket.on('data', (data) => {
     const request = requestParser(data);
     console.log(request);
-
+    
+    const res = new Response();
+    
     if (request.path === '/') {
-      socket.end("HTTP/1.1 200 OK\r\n\r\n");
+      socket.end(
+        res.status(200).value()
+      );
     } else if (/^\/echo\/[^/]+$/.test(request.path)) {
+      
       const echoStr = request.path.split('/')[2];
-      const length = Buffer.byteLength(echoStr)
-      socket.end(`HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${length}\r\n\r\n${echoStr}`);
+      res
+        .status(200)
+        .header('Content-Type', 'text/plain')
+        .header('Content-Length', Buffer.byteLength(echoStr))
+        .body(echoStr);
+        
+      socket.end(res.value());
+      
     } else if (request.path === '/user-agent') {
-      const userAgent = request.headers['User-Agent'];
-      const length = Buffer.byteLength(userAgent)
-      socket.end(`HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ${length}\r\n\r\n${userAgent}`);
+      res
+        .status(200)
+        .header('Content-Type', 'text/plain')
+        .header('Content-Length', Buffer.byteLength(request.headers['User-Agent']))
+        .body(request.headers['User-Agent']);
+
+      socket.end(res.value());
     } else {
-      socket.end("HTTP/1.1 404 Not Found\r\n\r\n")
+      socket.end(res.status(404).value());
     }
   });
 });
