@@ -1,5 +1,6 @@
 const net = require("net");
-const fs = require("fs/promises");
+const fs = require('fs');
+const fsPromises = require("fs/promises");
 const Response = require('./Response');
 const PORT = 4221;
 
@@ -58,13 +59,17 @@ const server = net.createServer((socket) => {
       const fileName = request.path.split('/')[2];
       
       const fileDir = process.argv[3];
-      const fileBuffer = await fs.readFile(`${fileDir}/${fileName}`);
-      
-      res
-        .status(200)
-        .header('Content-Type', 'application/octet-stream')
-        .header('Content-Length', fileBuffer.length)
-        .body(fileBuffer.toString());
+      const filePath = `${fileDir}/${fileName}`;
+      if (fs.existsSync(filePath)) {
+        const buffer = await fsPromises.readFile(`${fileDir}/${fileName}`);
+        res
+          .status(200)
+          .header('Content-Type', 'application/octet-stream')
+          .header('Content-Length', buffer.length)
+          .body(buffer.toString());
+      } else {
+        res.status(404);
+      }
       
       socket.end(res.value());
     } else {
