@@ -1,6 +1,9 @@
 const net = require("net");
+const fs = require("fs/promises");
 const Response = require('./Response');
 const PORT = 4221;
+
+console.log(process.argv[3]);
 
 const headersParser = (headersLines) => headersLines
   .filter(value => Boolean(value))
@@ -13,23 +16,21 @@ const headersParser = (headersLines) => headersLines
   }, {});
 
 const requestParser = (data) => {
-  const lines = data.toString().split('\r\n');
-  const [startLine, ...headersLines] = lines;
+  const [startAndHeaders, body] = data.toString().split('\r\n\r\n');
+  const [requestLine, ...headersLines] = startAndHeaders.split('\r\n');
   
-  const [method, path, protocol] = startLine.split(' ');
+  const [method, path, protocol] = requestLine.split(' ');
   const headers =  headersParser(headersLines);
   
-  return { method, path, protocol, headers };
+  return { method, path, protocol, headers, body };
 }
 
-
 const server = net.createServer((socket) => {
-  socket.on('data', (data) => {
+  socket.on('data', async (data) => {
     const request = requestParser(data);
     console.log(request);
     
     const res = new Response();
-    
     if (request.path === '/') {
       socket.end(
         res.status(200).value()
@@ -52,6 +53,19 @@ const server = net.createServer((socket) => {
         .header('Content-Length', Buffer.byteLength(request.headers['User-Agent']))
         .body(request.headers['User-Agent']);
 
+      socket.end(res.value());
+    } else if (/^\/files\/[^/]+$/.test(request.path)) {
+      const fileName = request.path.split('/')[2];
+      
+      const fileDir = process.argv[3];
+      const fileBuffer = await fs.readFile(`${fileDir}/${fileName}`);
+      
+      res
+        .status(200)
+        .header('Content-Type', 'application/octet-stream')
+        .header('Content-Length', fileBuffer.length)
+        .body(fileBuffer.toString());
+      
       socket.end(res.value());
     } else {
       socket.end(res.status(404).value());
