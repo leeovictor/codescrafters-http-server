@@ -4,6 +4,7 @@ const CRLF = "\r\n";
 const STATUS_CODE = {
   200: 'OK',
   404: 'Not Found',
+  500: 'Internal Error'
 };
 
 

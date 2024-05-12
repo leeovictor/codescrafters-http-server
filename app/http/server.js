@@ -38,25 +38,33 @@ class HttpServer {
       const res = new HttpResponse(socket);
       
       for (const routeDefinition of this._routes) {
-        if (routeDefinition.regex.test(req.path)) {
+        if (routeDefinition.method === req.method && routeDefinition.regex.test(req.path)) {
           const result = routeDefinition.match(req.path);
           req.params = result.params;
           return routeDefinition.handler(req, res);
         }
       }
       
-      // No Route Matches
       res.status(404).end();
     });
   }
 
-  get(path, handler) {
+  _registerRoute(method, path, handler) {
     this._routes.push({
+      method,
       name: path,
       match: pToRgx.match(path),
       regex: pToRgx.pathToRegexp(path),
       handler,
     });
+  }
+
+  get(path, handler) {
+    this._registerRoute('GET', path, handler);
+  }
+
+  post(path, handler) {
+    this._registerRoute('POST', path, handler);
   }
 
   listen(port, hostname, cb) {
