@@ -4,7 +4,7 @@
     "description": "Build your own HTTP-Server challenge, from CodeCrafters",
     "main": "main.js",
     "scripts": {
-        "dev": "node app/main.js",
+        "dev": "nodemon app/main.js",
         "dev:dir": "node app/main.js --directory"
     },
     "keywords": [
@@ -12,5 +12,10 @@
     ],
     "author": "",
     "license": "MIT",
-    "dependencies": {}
+    "devDependencies": {
+        "nodemon": "^3.1.0"
+    },
+    "dependencies": {
+        "path-to-regexp": "^6.2.2"
+    }
 }
