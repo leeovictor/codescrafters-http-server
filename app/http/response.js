@@ -3,6 +3,7 @@ const stream = require('stream');
 const CRLF = "\r\n";
 const STATUS_CODE = {
   200: 'OK',
+  201: 'Created',
   404: 'Not Found',
   500: 'Internal Error'
 };
