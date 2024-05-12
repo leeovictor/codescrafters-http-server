@@ -5,6 +5,7 @@ const { createHttpServer } = require('./http/server');
 
 const PORT = 4221;
 const app = createHttpServer();
+const directory = process.argv[3];
 
 app.get('/', (_, res) => res.end());
 app.get('/user-agent', (req, res) => {
@@ -17,5 +18,16 @@ app.get('/echo/:echoStr', (req, res) => {
   res.body(req.params.echoStr);
   res.end()
 });
+app.get('/files/:fileName', (req, res) => {
+  fs.readFile(`${directory}/${req.params.fileName}`, (err, data) => {
+    if (err) {
+      return res.status(404).end();
+    }
+
+    res.setHeader('content-type', 'application/octet-stream');
+    res.body(data);
+    res.end();
+  })
+})
 
 app.listen(PORT, 'localhost', () => console.log(`server listenning on ${PORT}`));
