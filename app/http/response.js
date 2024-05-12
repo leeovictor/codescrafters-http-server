@@ -25,7 +25,7 @@ class HttpResponse {
           responseArray.push(`${key.toLowerCase()}: ${this.headers[key]}`);
         });
     }
-    responseArray.push(`${CRLF}${this.bodyData ?? ''}`);
+    responseArray.push(`${CRLF}${this.bodyData.toString('utf-8') ?? ''}`);
     return responseArray.join(CRLF);
   }
 
@@ -38,7 +38,7 @@ class HttpResponse {
     if (this.headers['content-encoding'] === 'gzip') {
       const buf = zlib.gzipSync(data);
       this.setHeader('content-length', buf.length);
-      this.bodyData = buf.toString('utf-8')
+      this.bodyData = buf;
       return this;
     }
     
