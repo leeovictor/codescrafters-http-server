@@ -15,8 +15,8 @@ const headersParser = (headersLines) => headersLines
   }, {});
 
 const requestParser = (data) => {
-  const [startAndHeaders, body] = data.toString().split('\r\n\r\n');
-  const [requestLine, ...headersLines] = startAndHeaders.split('\r\n');
+  const [head, body] = data.toString().split('\r\n\r\n');
+  const [requestLine, ...headersLines] = head.split('\r\n');
   
   const [method, path, protocol] = requestLine.split(' ');
   const headers =  headersParser(headersLines);
@@ -28,13 +28,12 @@ class HttpServer {
   constructor() {
     this._routes = [];
     this._tcpServer = net.createServer();
-
     this._tcpServer.on('connection', this._handleConnection.bind(this));
   }
 
   _handleConnection(socket) {
     socket.on('data', (data) => {
-      const req = requestParser(data);
+      const req = requestParser(data); 
       const res = new HttpResponse(socket);
       
       for (const routeDefinition of this._routes) {
@@ -46,14 +45,14 @@ class HttpServer {
             const acceptEncodingHeader = req.headers['accept-encoding'];
             const encodingList = acceptEncodingHeader.split(',').map(t => t.trim());
             if (encodingList.includes('gzip')) {
-              res.setHeader('content-encoding', 'gzip');
+              res.setHeader('Content-Encoding', 'gzip');
             }
           }
           return routeDefinition.handler(req, res);
         }
       }
       
-      res.status(404).end();
+      res.writeHead(404).end();
     });
   }
 

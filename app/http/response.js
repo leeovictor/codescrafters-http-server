@@ -16,44 +16,31 @@ class HttpResponse {
     this.bodyData;
   }
 
-  _buildResponseData() {
-    const responseArray = [`HTTP/1.1 ${this.statusCode} ${STATUS_CODE[this.statusCode]}`];
-    const headerKeys = Object.keys(this.headers);
-    if (headerKeys.length > 0) {
-      headerKeys
-        .forEach((key) => {
-          responseArray.push(`${key.toLowerCase()}: ${this.headers[key]}`);
-        });
-    }
-    responseArray.push(`${CRLF}${this.bodyData.toString('utf-8') ?? ''}`);
-    return responseArray.join(CRLF);
-  }
-
-  status(code) {
-    this.statusCode = code
-    return this;
-  }
-
-  body(data) {
-    if (this.headers['content-encoding'] === 'gzip') {
-      const buf = zlib.gzipSync(data);
-      this.setHeader('content-length', buf.length);
-      this.bodyData = buf;
-      return this;
-    }
-    
-    this.setHeader('content-length', Buffer.byteLength(data));
-    this.bodyData = data;
-    return this;
-  }
-
   setHeader(key, value) {
     this.headers[key] = value;
     return this;
   }
 
-  end() {
-    this._socket.end(this._buildResponseData());
+  writeHead(status, headersMap) {
+    const statusLine = `HTTP/1.1 ${status} ${STATUS_CODE[status]}\r\n`;
+    let groupA = '', groupB = '';
+    if (Object.keys(this.headers).length > 0) {
+      groupA = Object.keys(this.headers).map(key => `${key}: ${this.headers[key]}\r\n`).join('');
+    }
+    if (headersMap) {
+      groupB = Object.keys(headersMap).map(key => `${key}: ${headersMap[key]}\r\n`).join('');
+    }
+    const headers = groupA + groupB;
+    this._socket.write(statusLine + headers + '\r\n');
+    return this;
+  }
+
+  write(buffer) {
+    this._socket.write(buffer);
+  }
+  
+  end(data) {
+    this._socket.end(data)
   }
 }
 
