@@ -1,7 +1,6 @@
 const net = require("net");
 const fs = require('fs');
 const fsPromises = require("fs/promises");
-const Response = require('./Response');
 const { createHttpServer } = require('./http/server');
 
 const PORT = 4221;
