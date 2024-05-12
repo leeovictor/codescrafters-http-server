@@ -25,7 +25,7 @@ class HttpResponse {
           headArray.push(`${key.toLowerCase()}: ${this.headers[key]}`);
         });
     }
-    return headArray.join(CRLF);
+    return headArray.join(CRLF) + CRLF;
   }
 
   status(code) {
