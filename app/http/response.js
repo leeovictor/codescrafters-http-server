@@ -15,17 +15,18 @@ class HttpResponse {
     this.headers = {};
     this.bodyData;
   }
-  
-  _buildHead() {
-    const headArray = [`HTTP/1.1 ${this.statusCode} ${STATUS_CODE[this.statusCode]}`];
+
+  _buildResponseData() {
+    const responseArray = [`HTTP/1.1 ${this.statusCode} ${STATUS_CODE[this.statusCode]}`];
     const headerKeys = Object.keys(this.headers);
     if (headerKeys.length > 0) {
       headerKeys
         .forEach((key) => {
-          headArray.push(`${key.toLowerCase()}: ${this.headers[key]}`);
+          responseArray.push(`${key.toLowerCase()}: ${this.headers[key]}`);
         });
     }
-    return headArray.join(CRLF) + CRLF;
+    responseArray.push(`${CRLF}${this.bodyData ?? ''}`);
+    return responseArray.join(CRLF);
   }
 
   status(code) {
@@ -37,7 +38,7 @@ class HttpResponse {
     if (this.headers['content-encoding'] === 'gzip') {
       const buf = zlib.gzipSync(data);
       this.setHeader('content-length', buf.length);
-      this.bodyData = buf;
+      this.bodyData = buf.toString('utf-8')
       return this;
     }
     
@@ -52,11 +53,7 @@ class HttpResponse {
   }
 
   end() {
-    this._socket.write(this._buildHead());
-    if (this.bodyData) {
-      return this._socket.end(this.bodyData);
-    }
-    this._socket.end();
+    this._socket.end(this._buildResponseData());
   }
 }
 
