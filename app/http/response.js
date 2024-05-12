@@ -8,7 +8,6 @@ const STATUS_CODE = {
   500: 'Internal Error'
 };
 
-
 class HttpResponse {
   constructor(socket) {
     this._socket = socket;
