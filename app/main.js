@@ -1,7 +1,6 @@
-const net = require("net");
 const fs = require('fs');
-const fsPromises = require("fs/promises");
 const { createHttpServer } = require('./http/server');
+const zlib = require('zlib');
 
 const PORT = 4221;
 const app = createHttpServer();
@@ -18,11 +17,21 @@ app.get('/user-agent', (req, res) => {
 });
 
 app.get('/echo/:echoStr', (req, res) => {
+  let compress = false;
+  if (req.headers['accept-encoding']?.split(',').map(d => d.trim()).includes('gzip')) {
+    compress = true;
+    res.setHeader('Content-Encoding', 'gzip');
+  }
+
+  let finalEchoStr = req.params.echoStr;
+  if (compress) {
+    finalEchoStr = zlib.gzipSync(req.params.echoStr);
+  }
   res.writeHead(200, {
     'Content-Type': 'text/plain',
-    'Content-Length': Buffer.byteLength(req.params.echoStr)
+    'Content-Length': Buffer.byteLength(finalEchoStr)
   });
-  res.end(req.params.echoStr);
+  res.end(finalEchoStr);
 });
 
 app.get('/files/:fileName', (req, res) => {

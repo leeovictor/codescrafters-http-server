@@ -40,14 +40,6 @@ class HttpServer {
         if (routeDefinition.method === req.method && routeDefinition.regex.test(req.path)) {
           const result = routeDefinition.match(req.path);
           req.params = result.params;
-          
-          if (req.headers['accept-encoding']) {
-            const acceptEncodingHeader = req.headers['accept-encoding'];
-            const encodingList = acceptEncodingHeader.split(',').map(t => t.trim());
-            if (encodingList.includes('gzip')) {
-              res.setHeader('Content-Encoding', 'gzip');
-            }
-          }
           return routeDefinition.handler(req, res);
         }
       }

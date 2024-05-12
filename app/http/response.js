@@ -39,8 +39,8 @@ class HttpResponse {
     this._socket.write(buffer);
   }
   
-  end(data) {
-    this._socket.end(data)
+  end(buffer) {
+    this._socket.end(buffer);
   }
 }
 
