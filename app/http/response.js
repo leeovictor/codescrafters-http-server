@@ -35,6 +35,13 @@ class HttpResponse {
   }
 
   body(data) {
+    if (this.headers['content-encoding'] === 'gzip') {
+      const buf = zlib.gzipSync(data);
+      this.setHeader('content-length', buf.length);
+      this.bodyData = buf;
+      return this;
+    }
+    
     this.setHeader('content-length', Buffer.byteLength(data));
     this.bodyData = data;
     return this;
