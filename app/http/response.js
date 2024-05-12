@@ -1,4 +1,4 @@
-const stream = require('stream');
+const zlib = require('zlib');
 
 const CRLF = "\r\n";
 const STATUS_CODE = {

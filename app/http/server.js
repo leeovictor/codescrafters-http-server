@@ -1,7 +1,6 @@
 const net = require('net');
 const pToRgx = require('path-to-regexp');
 const HttpResponse = require('./response');
-const zlib = require('zlib');
 
 module.exports = { createHttpServer: () => new HttpServer() };
 
