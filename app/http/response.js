@@ -1,12 +1,4 @@
-const zlib = require('zlib');
-
-const CRLF = "\r\n";
-const STATUS_CODE = {
-  200: 'OK',
-  201: 'Created',
-  404: 'Not Found',
-  500: 'Internal Error'
-};
+const http = require('http')
 
 class HttpResponse {
   constructor(socket) {
@@ -21,17 +13,23 @@ class HttpResponse {
     return this;
   }
 
-  writeHead(status, headersMap) {
-    const statusLine = `HTTP/1.1 ${status} ${STATUS_CODE[status]}\r\n`;
-    let groupA = '', groupB = '';
-    if (Object.keys(this.headers).length > 0) {
-      groupA = Object.keys(this.headers).map(key => `${key}: ${this.headers[key]}\r\n`).join('');
+  _buildHeadersGroup(headersMap) {
+    if (
+        !headersMap ||
+        Object.keys(headersMap).length === 0
+    ){
+      return '';
     }
-    if (headersMap) {
-      groupB = Object.keys(headersMap).map(key => `${key}: ${headersMap[key]}\r\n`).join('');
-    }
-    const headers = groupA + groupB;
-    this._socket.write(statusLine + headers + '\r\n');
+    
+    return Object.keys(headersMap)
+      .map(key => `${key}: ${headersMap[key]}\r\n`)
+      .join('');
+  }
+
+  writeHead(status, headers) {
+    const statusLine = `HTTP/1.1 ${status} ${http.STATUS_CODES[status]}\r\n`;
+    const headersData = this._buildHeadersGroup({ ...headers, ...this.headers });
+    this._socket.write(statusLine + headersData + '\r\n'); 
     return this;
   }
 
